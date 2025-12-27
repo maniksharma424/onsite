@@ -15,6 +15,8 @@ import { Button } from '@/components/ui/button';
 import { Download, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
+const REMINDER_DISMISSED_KEY = 'backup-reminder-dismissed';
+
 interface BackupReminderProviderProps {
   children: React.ReactNode;
 }
@@ -22,14 +24,21 @@ interface BackupReminderProviderProps {
 export function BackupReminderProvider({ children }: BackupReminderProviderProps) {
   const [showReminder, setShowReminder] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [daysSince, setDaysSince] = useState(-1);
 
   useEffect(() => {
     // Check after a short delay to let the app load
     const timer = setTimeout(() => {
+      // Don't show if already dismissed this session
+      const dismissed = sessionStorage.getItem(REMINDER_DISMISSED_KEY);
+      if (dismissed) return;
+
       if (shouldShowBackupReminder()) {
+        const info = getLastBackupInfo();
+        setDaysSince(info.daysSince);
         setShowReminder(true);
       }
-    }, 2000);
+    }, 3000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -62,16 +71,19 @@ export function BackupReminderProvider({ children }: BackupReminderProviderProps
   };
 
   const handleRemindLater = () => {
+    // Remember dismissal for this session
+    sessionStorage.setItem(REMINDER_DISMISSED_KEY, 'true');
     setShowReminder(false);
   };
-
-  const { daysSince } = getLastBackupInfo();
 
   return (
     <>
       {children}
-      <Dialog open={showReminder} onOpenChange={setShowReminder}>
-        <DialogContent className="max-w-sm mx-4">
+      <Dialog open={showReminder} onOpenChange={(open) => {
+        if (!open) handleRemindLater();
+        else setShowReminder(open);
+      }}>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md mx-auto">
           <DialogHeader>
             <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-2">
               <Clock className="w-6 h-6 text-amber-600" />
@@ -103,4 +115,3 @@ export function BackupReminderProvider({ children }: BackupReminderProviderProps
     </>
   );
 }
-

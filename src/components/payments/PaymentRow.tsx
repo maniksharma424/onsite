@@ -46,7 +46,6 @@ export function PaymentRow({
             isIncoming ? 'text-green-600' : 'text-red-600'
           )}
         >
-          {isIncoming ? '+' : '-'}
           {formatCurrency(payment.amount)}
         </div>
       </div>

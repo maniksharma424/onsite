@@ -63,14 +63,14 @@ export async function generateProjectLedgerPDF(
       format(new Date(payment.date), 'dd MMM yyyy'),
       vendor?.name || 'Unknown',
       isIncoming ? 'IN' : 'OUT',
-      formatAmount(payment.amount, isIncoming),
+      formatNumber(payment.amount),
       payment.description || '-',
     ];
   });
 
   autoTable(doc, {
     startY: yPos,
-    head: [['Date', 'Party', 'Type', 'Amount (Rs.)', 'Description']],
+    head: [['Date', 'Party', 'Type', 'Amount', 'Description']],
     body: tableData,
     theme: 'striped',
     styles: {
@@ -126,13 +126,13 @@ export async function generateProjectLedgerPDF(
   doc.setFont('helvetica', 'bold');
 
   // Summary box
-  const summaryX = pageWidth - 85;
+  const summaryX = pageWidth - 75;
   let summaryY = finalY + 15;
 
   // Total IN
   doc.setTextColor(22, 163, 74);
   doc.text('Total IN:', summaryX, summaryY);
-  doc.text('+Rs. ' + formatNumber(project.totalIncoming), pageWidth - 14, summaryY, {
+  doc.text(formatNumber(project.totalIncoming), pageWidth - 14, summaryY, {
     align: 'right',
   });
 
@@ -140,7 +140,7 @@ export async function generateProjectLedgerPDF(
   summaryY += 8;
   doc.setTextColor(220, 38, 38);
   doc.text('Total OUT:', summaryX, summaryY);
-  doc.text('-Rs. ' + formatNumber(project.totalOutgoing), pageWidth - 14, summaryY, {
+  doc.text(formatNumber(project.totalOutgoing), pageWidth - 14, summaryY, {
     align: 'right',
   });
 
@@ -151,7 +151,7 @@ export async function generateProjectLedgerPDF(
   summaryY += 4;
   doc.setTextColor(24, 24, 27);
   doc.text('Balance:', summaryX, summaryY);
-  doc.text('Rs. ' + formatNumber(project.balance), pageWidth - 14, summaryY, {
+  doc.text(formatNumber(project.balance), pageWidth - 14, summaryY, {
     align: 'right',
   });
 
@@ -167,11 +167,6 @@ export async function generateProjectLedgerPDF(
 
   // Save
   doc.save(`${project.name.replace(/\s+/g, '-').toLowerCase()}-ledger.pdf`);
-}
-
-function formatAmount(amount: number, isIncoming: boolean): string {
-  const sign = isIncoming ? '+' : '-';
-  return `${sign}Rs. ${formatNumber(amount)}`;
 }
 
 function formatNumber(num: number): string {

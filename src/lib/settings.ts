@@ -36,12 +36,11 @@ export function saveSettings(settings: Partial<AppSettings>): AppSettings {
 export function formatCurrency(amount: number): string {
   const settings = getSettings();
   const formatted = new Intl.NumberFormat('en-IN').format(Math.abs(amount));
-  const sign = amount < 0 ? '-' : amount > 0 ? '+' : '';
   
   if (settings.currency.position === 'before') {
-    return `${sign}${settings.currency.symbol}${formatted}`;
+    return `${settings.currency.symbol}${formatted}`;
   }
-  return `${sign}${formatted}${settings.currency.symbol}`;
+  return `${formatted}${settings.currency.symbol}`;
 }
 
 export function shouldShowBackupReminder(): boolean {
