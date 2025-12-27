@@ -93,7 +93,8 @@ export async function generateProjectLedgerPDF(
     didParseCell: (data) => {
       // Color the amount column
       if (data.section === 'body' && data.column.index === 3) {
-        const type = data.row.raw?.[2];
+        const rawRow = data.row.raw as string[] | undefined;
+        const type = rawRow?.[2];
         if (type === 'IN') {
           data.cell.styles.textColor = [22, 163, 74];
         } else {
@@ -102,7 +103,7 @@ export async function generateProjectLedgerPDF(
       }
       // Color the type column
       if (data.section === 'body' && data.column.index === 2) {
-        const type = data.cell.raw;
+        const type = data.cell.raw as string;
         if (type === 'IN') {
           data.cell.styles.textColor = [22, 163, 74];
           data.cell.styles.fontStyle = 'bold';

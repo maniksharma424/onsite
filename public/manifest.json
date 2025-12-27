@@ -3,10 +3,12 @@
   "short_name": "ConstMgmt",
   "description": "Manage construction projects and track payments",
   "start_url": "/",
+  "id": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#18181b",
   "orientation": "portrait",
+  "scope": "/",
   "icons": [
     {
       "src": "/icon.svg",

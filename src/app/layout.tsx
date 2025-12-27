@@ -1,14 +1,8 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist } from 'next/font/google';
 import './globals.css';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Toaster } from '@/components/ui/sonner';
 import { BackupReminderProvider } from '@/components/providers/BackupReminderProvider';
-
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
 
 export const metadata: Metadata = {
   title: 'Construction Management',
@@ -43,9 +37,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
-      <body
-        className={`${geistSans.variable} font-sans antialiased min-h-screen flex flex-col bg-zinc-50`}
-      >
+      <body className="font-sans antialiased min-h-screen flex flex-col bg-zinc-50">
         <BackupReminderProvider>
           {children}
           <BottomNav />
