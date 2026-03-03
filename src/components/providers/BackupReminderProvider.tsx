@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { shouldShowBackupReminder, markBackupComplete, getLastBackupInfo } from '@/lib/settings';
-import { exportAllData } from '@/lib/db';
+import { exportAllData, seedDatabaseIfEmpty } from '@/lib/db';
 import {
   Dialog,
   DialogContent,
@@ -27,9 +27,11 @@ export function BackupReminderProvider({ children }: BackupReminderProviderProps
   const [daysSince, setDaysSince] = useState(-1);
 
   useEffect(() => {
-    // Check after a short delay to let the app load
+    seedDatabaseIfEmpty();
+  }, []);
+
+  useEffect(() => {
     const timer = setTimeout(() => {
-      // Don't show if already dismissed this session
       const dismissed = sessionStorage.getItem(REMINDER_DISMISSED_KEY);
       if (dismissed) return;
 

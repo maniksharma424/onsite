@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie';
 import type { Project, Vendor, Payment } from './types';
+import { SEED_PROJECTS, SEED_VENDORS, SEED_PAYMENTS } from './seed-data';
 
 // Database schema
 const db = new Dexie('ConstructionManagement') as Dexie & {
@@ -15,6 +16,18 @@ db.version(1).stores({
 });
 
 export { db };
+
+export async function seedDatabaseIfEmpty() {
+  const projectCount = await db.projects.count();
+  const vendorCount = await db.vendors.count();
+  const paymentCount = await db.payments.count();
+
+  if (projectCount === 0 && vendorCount === 0 && paymentCount === 0) {
+    await db.vendors.bulkAdd(SEED_VENDORS);
+    await db.projects.bulkAdd(SEED_PROJECTS);
+    await db.payments.bulkAdd(SEED_PAYMENTS);
+  }
+}
 
 // Helper functions
 export async function getProjectWithTotals(projectId: string) {
