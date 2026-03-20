@@ -16,9 +16,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Wallet } from 'lucide-react';
-import type { PaymentType } from '@/lib/types';
+import type { PaymentType, Payment } from '@/lib/types';
 import { getSettings } from '@/lib/settings';
 import { format, isToday, isYesterday, isThisWeek } from 'date-fns';
+import { toast } from 'sonner';
 
 type FilterType = 'all' | PaymentType;
 
@@ -44,6 +45,15 @@ export default function PaymentsPage() {
 
   const projects = useLiveQuery(() => db.projects.toArray());
   const vendors = useLiveQuery(() => db.vendors.toArray());
+
+  const handleDeletePayment = async (paymentId: string) => {
+    try {
+      await db.payments.delete(paymentId);
+      toast.success('Payment deleted');
+    } catch {
+      toast.error('Failed to delete payment');
+    }
+  };
 
   const filteredPayments = payments?.filter((p) => {
     if (filter !== 'all' && p.type !== filter) return false;
@@ -123,7 +133,7 @@ export default function PaymentsPage() {
                   {dateLabel}
                 </h3>
                 <div className="space-y-2">
-                  {datePayments?.map((payment) => {
+                  {datePayments?.map((payment: Payment) => {
                     const vendor = vendors?.find((v) => v.id === payment.partyId);
                     const project = projects?.find((p) => p.id === payment.projectId);
                     return (
@@ -133,6 +143,7 @@ export default function PaymentsPage() {
                         vendorName={vendor?.name || 'Unknown'}
                         projectName={project?.name}
                         showProject
+                        onDelete={handleDeletePayment}
                       />
                     );
                   })}

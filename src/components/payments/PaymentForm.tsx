@@ -7,7 +7,8 @@ import { useEffect, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
-import type { PaymentType } from '@/lib/types';
+import type { PaymentType, PaymentMode } from '@/lib/types';
+import { PAYMENT_MODE_CONFIG } from '@/lib/types';
 import {
   Sheet,
   SheetContent,
@@ -34,6 +35,8 @@ const paymentSchema = z.object({
   amount: z.string().min(1, 'Amount is required'),
   date: z.string().min(1, 'Date is required'),
   description: z.string().optional(),
+  mode: z.string().optional(),
+  customMode: z.string().optional(),
 });
 
 type PaymentFormData = z.infer<typeof paymentSchema>;
@@ -52,6 +55,7 @@ export function PaymentForm({
   defaultType = 'outgoing',
 }: PaymentFormProps) {
   const [paymentType, setPaymentType] = useState<PaymentType>(defaultType);
+  const [paymentMode, setPaymentMode] = useState<PaymentMode | ''>('');
   const [showVendorForm, setShowVendorForm] = useState(false);
 
   const vendors = useLiveQuery(
@@ -78,11 +82,14 @@ export function PaymentForm({
 
   useEffect(() => {
     setPaymentType(defaultType);
+    setPaymentMode('');
     reset({
       partyId: '',
       amount: '',
       date: new Date().toISOString().split('T')[0],
       description: '',
+      mode: '',
+      customMode: '',
     });
   }, [open, defaultType, reset]);
 
@@ -98,6 +105,8 @@ export function PaymentForm({
         amount: parseFloat(data.amount),
         date: data.date,
         description: data.description || undefined,
+        mode: paymentMode || undefined,
+        customMode: paymentMode === 'other' ? (data.customMode || undefined) : undefined,
         isArchived: false,
         createdAt: now,
         updatedAt: now,
@@ -238,6 +247,36 @@ export function PaymentForm({
                 {...register('description')}
               />
             </div>
+
+            <div className="space-y-2">
+              <Label>Mode of Payment</Label>
+              <Select
+                value={paymentMode}
+                onValueChange={(value) => setPaymentMode(value as PaymentMode)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select mode (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(PAYMENT_MODE_CONFIG).map(([key, config]) => (
+                    <SelectItem key={key} value={key}>
+                      {config.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {paymentMode === 'other' && (
+              <div className="space-y-2">
+                <Label htmlFor="customMode">Specify Mode</Label>
+                <Input
+                  id="customMode"
+                  placeholder="e.g. Cheque, DD, etc."
+                  {...register('customMode')}
+                />
+              </div>
+            )}
 
             <div className="flex gap-3 pt-4">
               <Button

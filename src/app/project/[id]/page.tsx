@@ -27,6 +27,7 @@ import {
 import { cn } from '@/lib/utils';
 import { generateProjectLedgerPDF } from '@/lib/pdf';
 import { toast } from 'sonner';
+import type { Payment } from '@/lib/types';
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -68,6 +69,15 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const handleAddPayment = (type: PaymentType) => {
     setPaymentType(type);
     setShowPaymentForm(true);
+  };
+
+  const handleDeletePayment = async (paymentId: string) => {
+    try {
+      await db.payments.delete(paymentId);
+      toast.success('Payment deleted');
+    } catch {
+      toast.error('Failed to delete payment');
+    }
   };
 
   const handleExportPDF = async () => {
@@ -185,13 +195,14 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 description="Add your first payment using the buttons above"
               />
             )}
-            {payments?.map((payment) => {
+            {payments?.map((payment: Payment) => {
               const vendor = vendors?.find((v) => v.id === payment.partyId);
               return (
                 <PaymentRow
                   key={payment.id}
                   payment={payment}
                   vendorName={vendor?.name || 'Unknown'}
+                  onDelete={handleDeletePayment}
                 />
               );
             })}

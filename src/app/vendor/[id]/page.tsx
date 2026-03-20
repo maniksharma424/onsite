@@ -14,8 +14,10 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EmptyState } from '@/components/ui/empty-state';
 import { formatCurrency } from '@/lib/settings';
 import { VENDOR_TYPE_CONFIG } from '@/lib/types';
-import type { Vendor, PaymentType } from '@/lib/types';
+import type { Vendor, PaymentType, Payment } from '@/lib/types';
 import { Phone, Pencil, Wallet } from 'lucide-react';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 export default function VendorDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -39,6 +41,15 @@ export default function VendorDetailPage({ params }: { params: Promise<{ id: str
       </>
     );
   }
+
+  const handleDeletePayment = async (paymentId: string) => {
+    try {
+      await db.payments.delete(paymentId);
+      toast.success('Payment deleted');
+    } catch {
+      toast.error('Failed to delete payment');
+    }
+  };
 
   const typeConfig = VENDOR_TYPE_CONFIG[vendorData.type];
 
@@ -131,17 +142,44 @@ export default function VendorDetailPage({ params }: { params: Promise<{ id: str
             {paymentsByProject &&
               Object.entries(paymentsByProject).map(([projectId, payments]) => {
                 const project = projects?.find((p) => p.id === projectId);
+                const projectIn = (payments ?? [])
+                  .filter((p: Payment) => p.type === 'incoming')
+                  .reduce((sum: number, p: Payment) => sum + p.amount, 0);
+                const projectOut = (payments ?? [])
+                  .filter((p: Payment) => p.type === 'outgoing')
+                  .reduce((sum: number, p: Payment) => sum + p.amount, 0);
                 return (
                   <div key={projectId}>
-                    <h4 className="text-xs font-medium text-zinc-400 mb-2 flex items-center gap-1">
-                      🏗️ {project?.name || 'Unknown Project'}
-                    </h4>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-xs font-medium text-zinc-400 flex items-center gap-1">
+                        🏗️ {project?.name || 'Unknown Project'}
+                      </h4>
+                      <div className="flex items-center gap-3 text-xs">
+                        {projectIn > 0 && (
+                          <span className="text-green-600 font-medium">
+                            IN {formatCurrency(projectIn)}
+                          </span>
+                        )}
+                        {projectOut > 0 && (
+                          <span className="text-red-600 font-medium">
+                            OUT {formatCurrency(projectOut)}
+                          </span>
+                        )}
+                        <span className={cn(
+                          'font-semibold',
+                          projectIn - projectOut >= 0 ? 'text-zinc-700' : 'text-red-600'
+                        )}>
+                          Bal {formatCurrency(projectIn - projectOut)}
+                        </span>
+                      </div>
+                    </div>
                     <div className="space-y-2">
-                      {payments?.map((payment) => (
+                      {payments?.map((payment: Payment) => (
                         <PaymentRow
                           key={payment.id}
                           payment={payment}
                           vendorName={vendorData.name}
+                          onDelete={handleDeletePayment}
                         />
                       ))}
                     </div>

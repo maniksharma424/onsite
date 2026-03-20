@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { Project, Payment, Vendor } from './types';
+import { PAYMENT_MODE_CONFIG } from './types';
 import { format } from 'date-fns';
 
 interface ProjectWithTotals extends Project {
@@ -58,19 +59,25 @@ export async function generateProjectLedgerPDF(
   const tableData = sortedPayments.map((payment) => {
     const vendor = vendors.find((v) => v.id === payment.partyId);
     const isIncoming = payment.type === 'incoming';
+    const modeLabel = payment.mode
+      ? payment.mode === 'other' && payment.customMode
+        ? payment.customMode
+        : PAYMENT_MODE_CONFIG[payment.mode]?.label ?? ''
+      : '';
 
     return [
       format(new Date(payment.date), 'dd MMM yyyy'),
       vendor?.name || 'Unknown',
       isIncoming ? 'IN' : 'OUT',
       formatNumber(payment.amount),
+      modeLabel || '-',
       payment.description || '-',
     ];
   });
 
   autoTable(doc, {
     startY: yPos,
-    head: [['Date', 'Party', 'Type', 'Amount', 'Description']],
+    head: [['Date', 'Party', 'Type', 'Amount', 'Mode', 'Description']],
     body: tableData,
     theme: 'striped',
     styles: {
@@ -85,13 +92,13 @@ export async function generateProjectLedgerPDF(
     },
     columnStyles: {
       0: { cellWidth: 26, halign: 'left' },
-      1: { cellWidth: 40, halign: 'left' },
+      1: { cellWidth: 35, halign: 'left' },
       2: { cellWidth: 14, halign: 'center' },
-      3: { cellWidth: 32, halign: 'right' },
-      4: { cellWidth: 'auto', halign: 'left' },
+      3: { cellWidth: 28, halign: 'right' },
+      4: { cellWidth: 24, halign: 'left' },
+      5: { cellWidth: 'auto', halign: 'left' },
     },
     didParseCell: (data) => {
-      // Color the amount column
       if (data.section === 'body' && data.column.index === 3) {
         const rawRow = data.row.raw as string[] | undefined;
         const type = rawRow?.[2];
@@ -101,7 +108,6 @@ export async function generateProjectLedgerPDF(
           data.cell.styles.textColor = [220, 38, 38];
         }
       }
-      // Color the type column
       if (data.section === 'body' && data.column.index === 2) {
         const type = data.cell.raw as string;
         if (type === 'IN') {

@@ -31,6 +31,7 @@ export interface Vendor {
 
 // Payment types
 export type PaymentType = 'incoming' | 'outgoing';
+export type PaymentMode = 'cash' | 'upi' | 'bank_transfer' | 'credit_card' | 'other';
 
 export interface Payment {
   id: string;
@@ -40,10 +41,20 @@ export interface Payment {
   amount: number;
   date: string;
   description?: string;
+  mode?: PaymentMode;
+  customMode?: string;
   isArchived: boolean;
   createdAt: string;
   updatedAt: string;
 }
+
+export const PAYMENT_MODE_CONFIG: Record<PaymentMode, { label: string }> = {
+  cash: { label: 'Cash' },
+  upi: { label: 'UPI' },
+  bank_transfer: { label: 'Bank Transfer' },
+  credit_card: { label: 'Credit Card' },
+  other: { label: 'Other' },
+};
 
 // App settings
 export interface AppSettings {
